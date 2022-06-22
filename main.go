@@ -86,12 +86,19 @@ func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) type
 	}
 	proxywasm.LogCriticalf("nnnoooodddde id: %s", string(node))
 
-	metadata, err := proxywasm.GetProperty([]string{"metadata"})
+	nodeWorkloadName, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
 	if err != nil {
 		proxywasm.LogCriticalf("failed to get request data: %v", err)
 		return types.ActionContinue
 	}
-	proxywasm.LogCriticalf("mmmmmmmmetadata: %s", string(metadata))
+	proxywasm.LogCriticalf("nnnoooodddde downstream WORKLOAD_NAME: %s", string(nodeWorkloadName))
+
+	nodeWorkloadLabels, err := proxywasm.GetProperty([]string{"node", "metadata", "LABELS"})
+	if err != nil {
+		proxywasm.LogCriticalf("failed to get request data: %v", err)
+		return types.ActionContinue
+	}
+	proxywasm.LogCriticalf("nnnoooodddde downstream WORKLOAD_NAME: %s", string(nodeWorkloadLabels))
 
 	data, err := proxywasm.GetDownstreamData(0, dataSize)
 	proxywasm.AppendDownstreamData([]byte{})
@@ -111,6 +118,19 @@ func (ctx *networkContext) OnUpstreamData(dataSize int, endOfStream bool) types.
 	}
 
 	proxywasm.LogCriticalf("remote address: %s", string(ret))
+	nodeWorkloadName, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
+	if err != nil {
+		proxywasm.LogCriticalf("failed to get request data: %v", err)
+		return types.ActionContinue
+	}
+	proxywasm.LogCriticalf("nnnoooodddde upstream WORKLOAD_NAME: %s", string(nodeWorkloadName))
+
+	nodeWorkloadLabels, err := proxywasm.GetProperty([]string{"node", "metadata", "LABELS"})
+	if err != nil {
+		proxywasm.LogCriticalf("failed to get request data: %v", err)
+		return types.ActionContinue
+	}
+	proxywasm.LogCriticalf("nnnoooodddde upstream WORKLOAD_NAME: %s", string(nodeWorkloadLabels))
 
 	data, err := proxywasm.GetUpstreamData(0, dataSize)
 	if err != nil && err != types.ErrorStatusNotFound {
