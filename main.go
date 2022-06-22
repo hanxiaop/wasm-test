@@ -79,6 +79,13 @@ func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) type
 	}
 	proxywasm.LogCriticalf("upstream port: %s", string(uport))
 
+	node, err := proxywasm.GetProperty([]string{"node", "id"})
+	if err != nil {
+		proxywasm.LogCriticalf("failed to get request data: %v", err)
+		return types.ActionContinue
+	}
+	proxywasm.LogCriticalf("nnnoooodddde id: %s", string(node))
+
 	metadata, err := proxywasm.GetProperty([]string{"metadata"})
 	if err != nil {
 		proxywasm.LogCriticalf("failed to get request data: %v", err)
