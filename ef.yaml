@@ -1,8 +1,8 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
 metadata:
-  name: tcp-stats-filter-1.11
-  namespace: istio-system
+  name: test-tcp-meta
+  namespace: istio-io-tcp-traffic-shifting
   labels:
     app: tcp-echo
 spec:
@@ -31,5 +31,5 @@ spec:
                   runtime: "envoy.wasm.runtime.v8"
                   code:
                     local:
-                      filename: "main.wasm"
+                      filename: "/var/local/lib/wasm-filters/main2.wasm"
                   allow_precompiled: true

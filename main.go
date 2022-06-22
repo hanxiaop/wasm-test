@@ -17,7 +17,6 @@ type vmContext struct {
 
 // Override types.DefaultVMContext.
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-	proxywasm.LogCriticalf("wasm-tcp-protocol===5===NewPluginContext!")
 	return &pluginContext{counter: proxywasm.DefineCounterMetric("proxy_wasm_go.connection_counter")}
 }
 
@@ -42,24 +41,23 @@ type networkContext struct {
 
 // Override types.DefaultTcpContext.
 func (ctx *networkContext) OnNewConnection() types.Action {
-	proxywasm.LogCritical("new connection!")
+	proxywasm.LogInfo("new connection!")
 	return types.ActionContinue
 }
 
 // Override types.DefaultTcpContext.
 func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) types.Action {
-	proxywasm.LogCriticalf("wasm-tcp-protocol======OnDownstreamData!")
 	if dataSize == 0 {
 		return types.ActionContinue
 	}
+
 	data, err := proxywasm.GetDownstreamData(0, dataSize)
 	if err != nil && err != types.ErrorStatusNotFound {
 		proxywasm.LogCriticalf("failed to get downstream data: %v", err)
 		return types.ActionContinue
 	}
-	proxywasm.LogCriticalf("ssssssssss data-size: %d\n", dataSize)
-	//proxywasm.ReplaceDownstreamData([]byte("test test\n"))
-	proxywasm.LogCriticalf(">>>>>> downstream data received >>>>>>\n%s", string(data))
+
+	proxywasm.LogInfof(">>>>>> downstream data received >>>>>>\n%s", string(data))
 	return types.ActionContinue
 }
 
@@ -71,14 +69,24 @@ func (ctx *networkContext) OnDownstreamClose(types.PeerType) {
 
 // Override types.DefaultTcpContext.
 func (ctx *networkContext) OnUpstreamData(dataSize int, endOfStream bool) types.Action {
-	proxywasm.LogCriticalf("wasm-tcp-protocol======OnUpstreamData!")
+	if dataSize == 0 {
+		return types.ActionContinue
+	}
+
+	ret, err := proxywasm.GetProperty([]string{"upstream", "address"})
+	if err != nil {
+		proxywasm.LogCriticalf("failed to get upstream data: %v", err)
+		return types.ActionContinue
+	}
+
+	proxywasm.LogInfof("remote address: %s", string(ret))
 
 	data, err := proxywasm.GetUpstreamData(0, dataSize)
 	if err != nil && err != types.ErrorStatusNotFound {
 		proxywasm.LogCritical(err.Error())
 	}
-	proxywasm.LogCriticalf("ssssssssss data-size: %d\n", dataSize)
-	proxywasm.LogCriticalf("<<<<<< upstream data received <<<<<<\n%s", string(data))
+
+	proxywasm.LogInfof("<<<<<< upstream data received <<<<<<\n%s", string(data))
 	return types.ActionContinue
 }
 
