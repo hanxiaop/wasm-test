@@ -14,129 +14,47 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-	return &pluginContext{}
+	return &pluginContext{counter: proxywasm.DefineCounterMetric("proxy_wasm_go.connection_counter")}
 }
 
 type pluginContext struct {
+	// Embed the default plugin context here,
+	// so that we don't need to reimplement all the methods.
 	types.DefaultPluginContext
+	counter proxywasm.MetricCounter
 }
 
 func (ctx *pluginContext) NewTcpContext(contextID uint32) types.TcpContext {
-	return &networkContext{}
+	return &networkContext{counter: ctx.counter}
 }
 
 type networkContext struct {
+	// Embed the default tcp context here,
+	// so that we don't need to reimplement all the methods.
 	types.DefaultTcpContext
+	counter proxywasm.MetricCounter
 }
 
-type workload struct {
-	cluster      string
-	namespace    string
-	workloadName string
-	podName      string
+func (ctx *networkContext) OnNewConnection() types.Action {
+	proxywasm.LogInfo("new connection!")
+	return types.ActionContinue
+}
+
+func (ctx *networkContext) OnStreamDone() {
+	ctx.counter.Increment(1)
+	proxywasm.LogInfo("connection complete!")
+}
+
+func (ctx *networkContext) OnDownstreamClose(types.PeerType) {
+	proxywasm.LogInfo("downstream connection close!")
+	return
 }
 
 func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) types.Action {
-	//addr, err := proxywasm.GetProperty([]string{"source", "address"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("source host address: %s", string(addr))
-	//
-	//port, err := proxywasm.GetProperty([]string{"source", "port"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("source host port: %s", string(port))
-	//
-	//daddr, err := proxywasm.GetProperty([]string{"destination", "address"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("destination address: %s", string(daddr))
-	//
-	//dport, err := proxywasm.GetProperty([]string{"destination", "port"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("destination port: %s", string(dport))
-	//
-	//ulocal, err := proxywasm.GetProperty([]string{"upstream", "local_address"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("upstream local address: %s", string(ulocal))
-	//
-	//uaddr, err := proxywasm.GetProperty([]string{"upstream", "address"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("upstream address: %s", string(uaddr))
-	//
-	//uport, err := proxywasm.GetProperty([]string{"upstream", "port"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("upstream port: %s", string(uport))
-	//
-	//node, err := proxywasm.GetProperty([]string{"node", "id"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde id: %s", string(node))
-	//
-	//nodeWorkloadName, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream WORKLOAD_NAME: %s", string(nodeWorkloadName))
-	//
-	//nodeName, err := proxywasm.GetProperty([]string{"node", "metadata", "NAME"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream node NAME: %s", string(nodeName))
-	//
-	//nodeNamespace, err := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream node NAMESPACE: %s", string(nodeNamespace))
-	//
-	//nodeowner, err := proxywasm.GetProperty([]string{"node", "metadata", "OWNER"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream node OWNER: %s", string(nodeowner))
-	//
-	//nodeClusterID, err := proxywasm.GetProperty([]string{"node", "metadata", "CLUSTER_ID"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream node ClusterID: %s", string(nodeClusterID))
-	//
-	//nodeWorkloadLabels, err := proxywasm.GetProperty([]string{"node", "metadata", "LABELS"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get request data: %v", err)
-	//	return types.ActionContinue
-	//}
-	//proxywasm.LogCriticalf("nnnoooodddde downstream WORKLOAD_NAME: %s", string(nodeWorkloadLabels))
+	if dataSize == 0 {
+		return types.ActionContinue
+	}
 
-	// cluster_id
-	// workload_namespace
 	sourceClusterID, err := proxywasm.GetProperty([]string{"downstream_peer", "cluster_id"})
 	if err != nil {
 		proxywasm.LogCriticalf("failed to get downstream cluster id: %v", err)
@@ -158,42 +76,45 @@ func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) type
 		return types.ActionContinue
 	}
 
-	// this is inbound xxxxx
-	//clusterName, err := proxywasm.GetProperty([]string{"cluster_name"})
-	//if err != nil {
-	//	proxywasm.LogCriticalf("failed to get cluster name: %v", err)
-	//	return types.ActionContinue
-	//}
-	clusterName, err := proxywasm.GetProperty([]string{"node", "cluster"})
+	// this is the Envoy inbound to send request to
+	clusterName, err := proxywasm.GetProperty([]string{"cluster_name"})
 	if err != nil {
 		proxywasm.LogCriticalf("failed to get cluster name: %v", err)
 		return types.ActionContinue
 	}
-	sourceWorkload := workload{
-		cluster:      string(sourceClusterID),
-		namespace:    string(sourceWorkloadNamespace),
-		workloadName: string(sourceWorkloadName),
-		podName:      string(sourcePodName),
+	//proxywasm.LogCriticalf("downstream cluster id: %v", sourceClusterID)
+	//proxywasm.LogCriticalf("downstream workload namespace: %v", sourceWorkloadNamespace)
+	//proxywasm.LogCriticalf("downstream workload name: %v", sourceWorkloadName)
+	//proxywasm.LogCriticalf("downstream pod name: %v", sourcePodName)
+	//proxywasm.LogCriticalf("downstream cluster name: %v", clusterName)
+
+	workload := ""
+	for k, v := range map[string]string{
+		"cluster":   string(sourceClusterID),
+		"namespace": string(sourceWorkloadNamespace),
+		"name":      string(sourceWorkloadName),
+		"pod":       string(sourcePodName),
+	} {
+		workload += k + "=" + v + ","
 	}
-	headers := [][2]string{
-		generateHeader("cluster", sourceWorkload.cluster),
-		generateHeader("workload_namespace", sourceWorkload.workloadName),
-		generateHeader("workload_name", sourceWorkload.workloadName),
-		generateHeader("pod_name", sourceWorkload.podName),
-	}
-	proxywasm.LogCriticalf("headers: %v", headers)
+	workload = workload[:len(workload)-1]
+	//headers := [][2]string{
+	//	{":method", "GET"},
+	//	{"workload", workload},
+	//	{":authority", string(destinationAddr)},
+	//	{":path", "/"},
+	//	{"accept", "*/*"},
+	//}
+
+	//proxywasm.LogInfof("headers: %+v", headers)
+	proxywasm.LogCriticalf("workload: %s", workload)
 	proxywasm.LogCriticalf("cluster: %s", string(clusterName))
-	_, err = proxywasm.DispatchHttpCall(string(clusterName), headers, nil, nil, 5000, callBack)
-	if err != nil {
-		proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
-	}
+	////_, err = proxywasm.DispatchHttpCall(string(clusterName), headers, nil, nil, 5000, func(numHeaders, bodySize, numTrailers int) {
+	////	proxywasm.LogCriticalf("wasm callback...")
+	////})
+	//if err != nil {
+	//	proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+	//	return types.ActionContinue
+	//}
 	return types.ActionContinue
-}
-
-func callBack(numHeaders, bodySize, numTrailers int) {
-	proxywasm.LogCriticalf("wasm callback...")
-}
-
-func generateHeader(key, value string) [2]string {
-	return [2]string{key, value}
 }
