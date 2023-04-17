@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
 )
@@ -105,7 +107,7 @@ func (ctx *networkContext) OnDownstreamData(dataSize int, endOfStream bool) type
 	//	{":path", "/"},
 	//	{"accept", "*/*"},
 	//}
-
+	fmt.Println("yolo")
 	//proxywasm.LogInfof("headers: %+v", headers)
 	proxywasm.LogCriticalf("workload: %s", workload)
 	proxywasm.LogCriticalf("cluster: %s", string(clusterName))
